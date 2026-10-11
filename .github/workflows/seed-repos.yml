@@ -1,0 +1,40 @@
+name: Seed repositories
+
+on:
+  schedule:
+    # Daily at midnight UTC — slowly widens the corpus with newly popular repos.
+    - cron: "23 0 * * *"
+  workflow_dispatch:
+    inputs:
+      target:
+        description: "How many repositories to collect"
+        required: false
+        default: "1200"
+
+concurrency:
+  group: seed-repos
+  cancel-in-progress: false
+
+jobs:
+  seed:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+
+      - run: npm ci
+
+      - name: Seed new repositories
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          GITHUB_TOKEN_POOL: ${{ secrets.GH_TOKEN_POOL }}
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+        run: npx tsx scripts/seed-repos.ts --target=${{ github.event.inputs.target || '1200' }}

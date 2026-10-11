@@ -1,0 +1,49 @@
+name: Sync repositories
+
+on:
+  schedule:
+    # Every six hours — comfortably inside the GitHub rate limit thanks to ETag
+    # caching (304 responses are free).
+    - cron: "17 */6 * * *"
+  workflow_dispatch:
+    inputs:
+      limit:
+        description: "Maximum repositories to sync"
+        required: false
+        default: "500"
+      refresh:
+        description: "Re-sync rows already marked synced but older than 6 hours"
+        required: false
+        type: boolean
+        default: false
+
+concurrency:
+  group: sync-repos
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+
+      - run: npm ci
+
+      - name: Sync pending repositories
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          GITHUB_TOKEN_POOL: ${{ secrets.GH_TOKEN_POOL }}
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+        run: |
+          args="--limit=${{ github.event.inputs.limit || '500' }}"
+          if [ "${{ github.event.inputs.refresh }}" = "true" ]; then args="$args --refresh"; fi
+          npx tsx scripts/sync-repos.ts $args
