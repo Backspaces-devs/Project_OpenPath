@@ -19,6 +19,17 @@ export function supabaseAnonKey(): string | undefined {
   return read("NEXT_PUBLIC_SUPABASE_ANON_KEY") ?? read("SUPABASE_ANON_KEY");
 }
 
+export function isValidSupabaseUrl(value: string | undefined): value is string {
+  if (!value) return false;
+
+  try {
+    const parsed = new URL(value);
+    return parsed.protocol === "http:" || parsed.protocol === "https:";
+  } catch {
+    return false;
+  }
+}
+
 export function supabaseServiceRoleKey(): string | undefined {
   return read("SUPABASE_SERVICE_ROLE_KEY");
 }
@@ -29,11 +40,11 @@ export function supabaseServiceRoleKey(): string | undefined {
  * straight from GitHub, so this is an enhancement, not a requirement.
  */
 export function isSupabaseConfigured(): boolean {
-  return Boolean(supabaseUrl() && supabaseAnonKey());
+  return isValidSupabaseUrl(supabaseUrl()) && Boolean(supabaseAnonKey());
 }
 
 export function isSupabaseAdminConfigured(): boolean {
-  return Boolean(supabaseUrl() && supabaseServiceRoleKey());
+  return isValidSupabaseUrl(supabaseUrl()) && Boolean(supabaseServiceRoleKey());
 }
 
 export function requireSupabaseUrl(): string {
@@ -42,6 +53,12 @@ export function requireSupabaseUrl(): string {
     throw new ConfigurationError(
       "Supabase is not configured.",
       "Set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY in .env.local.",
+    );
+  }
+  if (!isValidSupabaseUrl(url)) {
+    throw new ConfigurationError(
+      "Supabase URL is invalid.",
+      "NEXT_PUBLIC_SUPABASE_URL must be a complete HTTP or HTTPS URL, such as https://your-project.supabase.co.",
     );
   }
   return url;
@@ -128,7 +145,7 @@ export function envStatus(): EnvStatus[] {
   return [
     {
       name: "NEXT_PUBLIC_SUPABASE_URL",
-      present: Boolean(supabaseUrl()),
+      present: isValidSupabaseUrl(supabaseUrl()),
       required: false,
       description: "Project URL. Optional — without it OpenPath reads GitHub live.",
     },

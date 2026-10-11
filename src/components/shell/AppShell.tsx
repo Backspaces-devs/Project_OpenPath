@@ -197,8 +197,7 @@ function SidebarHeader() {
     <div className="flex items-start justify-between gap-2">
       <Wordmark />
       <a
-        href="https://backspaces-one.vercel.app"
-        target="_blank"
+        href="/"
         rel="noreferrer noopener"
         title="Back to Backspaces"
         aria-label="Back to Backspaces"

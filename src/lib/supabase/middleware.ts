@@ -1,7 +1,7 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
-import { supabaseAnonKey, supabaseUrl } from "@/lib/env";
+import { isSupabaseConfigured, supabaseAnonKey, supabaseUrl } from "@/lib/env";
 
 /**
  * Refreshes the Supabase session cookie on every request and passes the
@@ -15,7 +15,7 @@ export async function updateSession(request: NextRequest): Promise<NextResponse>
 
   const url = supabaseUrl();
   const anonKey = supabaseAnonKey();
-  if (!url || !anonKey) return response;
+  if (!isSupabaseConfigured() || !url || !anonKey) return response;
 
   const supabase = createServerClient(url, anonKey, {
     cookies: {
