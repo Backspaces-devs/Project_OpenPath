@@ -109,7 +109,7 @@ export function AppShell({ children, user = null, sourceLabel }: AppShellProps) 
 
       {/* ---------------- Main column ---------------- */}
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="sticky top-0 z-30 flex h-14 shrink-0 items-center gap-3 border-b border-white/[0.08] bg-white/5 px-4 backdrop-blur-md sm:px-6">
+        <header className="sticky top-0 z-30 flex h-14 shrink-0 items-center gap-3 border-b lg:border-none border-white/10 bg-white/0 px-4 backdrop-blur-md sm:px-6 ">
           <button
             type="button"
             onClick={() => setDrawerOpen(true)}
